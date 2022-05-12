@@ -1,4 +1,5 @@
 from pickle import TRUE
+from tkinter import Y
 from turtle import width
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,7 +7,7 @@ import matplotlib.pyplot as plt
 import argparse
 import time
 
-from sympy import Transpose, div, true
+from sympy import Transpose, div, false, true
 def GosperGliderGun(height,width):
     gun = np.zeros(height*width).reshape(height, width)
     gun[5][1] = gun[5][2] = 1
@@ -36,7 +37,10 @@ def rot90gun(gun):
     
     newgun = np.rot90(gun)
     return newgun
-def gunatpos(state,i,j,transpose = False,rotate=False,xsym=False):
+def flipedgun(gun):
+    newgun = np.flip(gun)
+    return newgun
+def gunatpos(state,i,j,bigrotate = False,rotate=False,xsym=False):
     #minimum sizeof gun
     gun = GosperGliderGun(11,38)
     #put gun inside of state 
@@ -45,14 +49,18 @@ def gunatpos(state,i,j,transpose = False,rotate=False,xsym=False):
         newgun = rot90gun(gun)
         #gun = orientedgun(newgun)
         state[i:i+38, j:j+11] = newgun
-    elif transpose:
-        gun = orientedgun(gun)
-        state[i:i+38, j:j+11] =gun
+    elif bigrotate:
+        newgun = np.rot90(gun)
+        newgun = np.rot90(newgun)
+        state[i:i+11, j:j+38] =newgun
        
- 
+    elif xsym:
+        newgun = flipedgun(gun)
+        state[i:i+11, j:j+38] = newgun
     else:
         
         state[i:i+11, j:j+38] = gun
+    
 
 def eater(state,i,j):
     eater = np.zeros(4*4).reshape(4,4)
@@ -64,27 +72,49 @@ def eater(state,i,j):
     eater[3][2]=1
     eater[3][3] = 1
     state[i:i+4, j:j+4] = eater
+
+def cutter(state,i,j,flip=false):
+    cutter = np.zeros(60*60).reshape(60,60)
+    gunatpos(cutter,i,j)
+    eater(cutter,i+30,j+44)
+    if flip:
+        cutter = np.flip(cutter,1)
+    state[i:i+60, j:j+60] = cutter
+
 #makes +60 period gun into +30 period gun
-def periodicdivisor(state,i,j):
+def periodicdivisor(state,i,j,rotate=False):
     gunatpos(state,i,j)
     gunatpos(state,i+20,j+11,rotate=True)
+#better than  not gate example
 def notgate(state,i,j,inp=0):
     if inp:
         gunatpos(state,i,j)
     periodicdivisor(state,i+90,j+30)
-
+#equivalenet to not gate
+#better than initial not gate
+#better than my first not gate,best gate?
+def periodicnulifierwithinput(state,i,j,inp = 0 ):
+    if inp:
+        gunatpos(state,i,j)
+    gunatpos(state,i+20,j+12,rotate=True)
     
+def orgate(state,i,j,inp = 1 ,inp2 = 1):
+    cutter(state,i,j,flip=inp)
     
 
 
 class Board(object):
-   def __init__(self, size, seed = "not"):
+   def __init__(self, size, seed = "or"):
       if seed == 'Random':
          self.state = np.random.randint(2, size = size)
          print(type(self.state))
+
+      elif seed == 'or':
+          self.state  =  np.zeros(150*150).reshape(150,150)
+          orgate(self.state,4,4)
       elif seed == "not":
-          self.state  =  np.zeros(300*300).reshape(300,300)
-          notgate(self.state,4,4,inp=1)
+          self.state  =  np.zeros(100*100).reshape(100,100)
+          periodicnulifierwithinput(self.state,4,4)
       elif seed == "tgun":
           self.state  =  np.zeros(100*100).reshape(100,100)
           gunatpos(self.state,10,10 ,transpose=True)

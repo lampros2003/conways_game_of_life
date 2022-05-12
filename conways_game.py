@@ -20,6 +20,7 @@ import matplotlib.animation as animation
 from sympy import false, root, true
 import pygame
 def changecol(d,i,j):
+    
     d[i-2][j-1]=30
 
 class cell():
