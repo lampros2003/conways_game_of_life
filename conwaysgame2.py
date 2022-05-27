@@ -28,6 +28,12 @@ def GosperGliderGun(height, width):
     gun[3][35] = gun[3][36] = 1
     gun[4][35] = gun[4][36] = 1
     return gun
+def bigun():
+  """  x = 64, y = 11, rule = B3/S23
+24bobo$22bo3bo$14bo7bo15bobo$13b4o4bo4bo11bo3bo$12b2obobo4bo19bo7bo$b
+2o8b3obo2bo3bo3bo11bo4bo4b4o$b2o9b2obobo6bobo15bo4bobob2o$13b4o21bo3b
+o3bo2bob3o8b2o$14bo23bobo6bobob2o9b2o$48b4o$50bo!"""
+
 
 def orientedgun(gun):
 
@@ -135,7 +141,7 @@ OO.......................OO..........................OO....
     
                 
 def eater():
-    eater = np0zeros(4*4).reshape(4, 4)
+    eater = np.zeros(4*4).reshape(4, 4)
     eater[0][0] = 1
     eater[0][1] = 1
     eater[1][0] = 1
@@ -168,7 +174,12 @@ def periodicdivisor(state, i, j, down=False):
 
 # better than  not gate example
 
-
+def addGlider(i, j, grid):
+ 
+    glider = np.array([[0,    0, 1],
+                       [1,  0, 1],
+                       [0,  1, 1]])
+    grid[i:i+3, j:j+3] = glider
 def notgate(state, i, j, inp=0):
     if inp:
         gunatpos(state, i, j)
@@ -205,11 +216,15 @@ def orgate(state, i, j, inp=0, inp2=0):
     gunatpos(state, i, j+145, ysym=True)
 
 def latch(state,i,j,set =0 ,reset=0):
-    l = 30
+    l = 20
+    l2 =20
     
-    gunatpos(state,i+l,j+l)
-    gunatpos(state,i+l,j+l+37,ysym= True)
-    gunatpos(state,i+60,j+30,rotate=True)
+    addGlider(i+l2+9,j+l+l2+9,state)
+    gunatpos(state,i+l+l2,j+l+l2)
+    state[i+l+l2:i+l+l2+38,j+l+l2+35 :j+l+38+l2] = 0
+    gunatpos(state,i+l+2+l2,j+l+27+l2,ysym= True)
+    state[i+l+l2-10:i+l+l2+10,j+l+28+l2 :j+l+28+l2+4] = 0
+   
 
     
     
@@ -217,9 +232,11 @@ def latch(state,i,j,set =0 ,reset=0):
 def clock(state):
     periodicdivisor(state, 0, 10,down=True)
     periodicdivisor(state, 70, 0, )
-
+#board is the object that stores the state of the board 
 class Board():
+    
     def __init__(self, size, seed="or"):
+        #various seeds
         if seed == 'Random':
             self.state = np.random.randint(2, size=size)
             print(type(self.state))
@@ -279,24 +296,27 @@ class Engine():
 
     def countNeighbors(self):
         state = self.state
-
+        #numpy formula wiτch calculates the sum of all neighboting cells of a numpy array (2d)
         n = (state[0:-2, 0:-2] + state[0:-2, 1:-1] + state[0:-2, 2:] +
              state[1:-1, 0:-2] + state[1:-1, 2:] + state[2:, 0:-2] +
              state[2:, 1:-1] + state[2:, 2:])
 
         return n
-
+    
     def applyRules(self):
         n = self.countNeighbors()
         state = self.state
-        birth = (n == 3) & (state[1:-1, 1:-1] == 0)
-        survive = ((n == 2) | (n == 3)) & (state[1:-1, 1:-1] == 1)
+        #birth = (n == 3) & (state[1:-1, 1:-1] == 0)
+        #survive = ((n == 2) | (n == 3)) & (state[1:-1, 1:-1] == 1)
+        #boolean array live implements the rules of the game for all cells in state 
+        live = ((n == 3) | (n==2) &(state[1:-1, 1:-1] == 1))
+        #all cell take the value of live
         state[...] = 0
-        state[1:-1, 1:-1][birth | survive] = 1
-        nBirth = np.sum(birth)
-        self.nBirth = nBirth
-        nSurvive = np.sum(survive)
-        self.nSurvive = nSurvive
+        state[1:-1, 1:-1][live] = 1
+        #nBirth = np.sum(birth)
+        #self.nBirth = nBirth
+        #nSurvive = np.sum(survive)
+        #self.nSurvive = nSurvive
         return state
 
 
